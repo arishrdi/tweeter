@@ -5,10 +5,13 @@ import {
   type DefaultSession,
   type NextAuthOptions,
 } from "next-auth";
-import DiscordProvider from "next-auth/providers/discord";
+import GoogleProvider from "next-auth/providers/google";
+import CredentialProvider from "next-auth/providers/credentials";
 
 import { env } from "~/env.mjs";
 import { db } from "~/server/db";
+
+import * as argon2 from "argon2";
 
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
@@ -20,6 +23,9 @@ declare module "next-auth" {
   interface Session extends DefaultSession {
     user: DefaultSession["user"] & {
       id: string;
+      image: string;
+      username: string;
+      coverProfile: string;
       // ...other properties
       // role: UserRole;
     };
@@ -38,19 +44,88 @@ declare module "next-auth" {
  */
 export const authOptions: NextAuthOptions = {
   callbacks: {
-    session: ({ session, user }) => ({
-      ...session,
-      user: {
-        ...session.user,
-        id: user.id,
-      },
-    }),
+    jwt: async ({ token, user, trigger, session }) => {
+      if (trigger === "update" && session) {
+        token.id = session.id;
+        token.email = session.email;
+        token.name = session.name
+        token.picture = session.image
+        // token.email = session;
+      }
+      if (user) {
+        token.id = user.id;
+        token.email = user.email;
+        token.name = user.name
+      }
+
+      // if (trigger === "update" && session?.id && session?.email) {
+
+      //   token.id = session.id;
+      //   token.email = session.email;
+      // }
+
+      return Promise.resolve(token);
+    },
+    session({ session, token }) {
+      if (token && session.user) {
+        session.user.id = token.id as string;
+      }
+
+      return {
+        ...session,
+        user: { ...session.user, id: token.id, name: token.name, image: token.picture, email: token.email },
+      };
+    },
+
+    // session: ({ session, user }) => ({
+    //   ...session,
+    //   user: {
+    //     ...session.user,
+    //     id: user.id,
+    //   },
+    // }),
   },
+  secret: env.NEXTAUTH_SECRET,
   adapter: PrismaAdapter(db),
+  session: {
+    strategy: "jwt",
+  },
+  pages: {
+    newUser: "/register",
+    signIn: "/login",
+    error: "/login",
+  },
   providers: [
-    DiscordProvider({
-      clientId: env.DISCORD_CLIENT_ID,
-      clientSecret: env.DISCORD_CLIENT_SECRET,
+    GoogleProvider({
+      clientId: env.GOOGLE_CLIENT_ID,
+      clientSecret: env.GOOGLE_CLIENT_SECRET,
+    }),
+    CredentialProvider({
+      credentials: {
+        username: { label: "Username", type: "text" },
+        password: { label: "Password", type: "password" },
+      },
+      async authorize(credentials) {
+        // console.log("Login", credentials);
+        const user = await db.user.findUnique({
+          where: {
+            username: credentials?.username,
+          },
+        });
+
+        if (user) {
+          const password = await argon2.verify(
+            user.password!,
+            credentials?.password ?? "",
+          );
+          if (password) {
+            return user;
+          }
+          return null;
+        } else {
+          return null;
+        }
+      },
     }),
     /**
      * ...add more providers here.
