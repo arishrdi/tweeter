@@ -11,6 +11,8 @@ import {
   useDisclosure,
   Card,
   CardBody,
+  Listbox,
+  ListboxItem,
 } from "@nextui-org/react";
 import { useSession } from "next-auth/react";
 import Head from "next/head";
@@ -27,34 +29,29 @@ import { useRouter } from "next/router";
 import useFollow from "~/hooks/useFollow";
 import { type IUser } from "~/types/user";
 import CardUsers from "~/components/CardUsers";
+import CardTweet from "~/components/CardTweet";
 
 export default function Profile() {
   const { data: session, update } = useSession();
   const router = useRouter();
   const username = router.query.profile as string;
-  const { data: user, refetch } = api.user.getCurrentUser.useQuery({
+  const { data: user } = api.user.getCurrentUser.useQuery({
     username,
   });
 
-  console.log("Profile", user);
+  const { data: tweets } = api.tweet.getCurrentUserTweets.useQuery({
+    username,
+  });
 
-  // const isUserFollowed = !!user?.followers.find(
-  //   (u) => u.userId === session?.user.id,
-  // )?.userId;
+  // console.log("Profile", tweets);
 
-  // const isUserFollowed = 
+  const followerID = user?.followers?.map((u) => u.id);
 
-  // console.log("isUserFollowed", isUserFollowed, user?.followers);
-
-  const followerID = user?.followers?.map((u) => u.id)
-
-  // const { isFollowed, onFollowing, setIsFollowed } = useFollow(
-  //   user[0]?.isFollowed ?? false,
-  //   Number(followerID),
-  //   user[0],
-  // );
-
-  const {isFollowed, onFollowing, setIsFollowed} = useFollow(user?.isFollowed ?? false, Number(followerID), user?.id ?? "")
+  const { isFollowed, onFollowing, setIsFollowed } = useFollow(
+    user?.isFollowed ?? false,
+    Number(followerID),
+    user?.id ?? "",
+  );
 
   if (!session) {
     return null;
@@ -103,8 +100,8 @@ export default function Profile() {
                       </span>
                       {user?.id === session.user.id ? (
                         <ModalEditProfile user={user} />
-                        // <p>mbuj</p>
                       ) : (
+                        // <p>mbuj</p>
                         <Button
                           className={
                             !user?.isFollowed
@@ -122,15 +119,60 @@ export default function Profile() {
                         </Button>
                       )}
                     </div>
-                    <article className="mt-5 min-h-[30px]" dangerouslySetInnerHTML={{__html: user?.bio ?? ""}}></article>
+                    <p className="min-h-[60px] whitespace-pre-wrap">
+                      {" "}
+                      {user?.bio ?? ""}
+                    </p>
                   </div>
                 </CardBody>
               </div>
             </Card>
+            <div className="mx-20 mt-10 grid grid-cols-3 gap-10">
+              <div className="col-span-1">
+                <Card className="">
+                  <CardBody>
+                    <Listbox variant="faded" color="primary">
+                      <ListboxItem key="tweet">Tweet</ListboxItem>
+                      <ListboxItem key="reply">Tweet & Replies</ListboxItem>
+                      <ListboxItem key="media">Media</ListboxItem>
+                      <ListboxItem key="like">LIkes</ListboxItem>
+                    </Listbox>
+                  </CardBody>
+                </Card>
+              </div>
+              <div className="col-span-2">
+                <div className=" flex flex-col gap-10">
+                  {tweets?.tweets.map((tweet) => {
+                    return (
+                      <CardTweet key={tweet.id} tweet={tweet} user={user} />
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-        <br />
-        {router.query.profile}
+        {/* <div className="mx-20 mt-14 grid grid-cols-3 gap-5">
+          <div className="col-span-1">
+            <Card className="">
+              <CardBody>
+                <Listbox variant="faded" color="primary">
+                  <ListboxItem key="tweet">Tweet</ListboxItem>
+                  <ListboxItem key="reply">Tweet & Replies</ListboxItem>
+                  <ListboxItem key="media">Media</ListboxItem>
+                  <ListboxItem key="like">LIkes</ListboxItem>
+                </Listbox>
+              </CardBody>
+            </Card>
+          </div>
+          <div className="col-span-2">
+            <div className=" flex flex-col gap-5">
+              {tweets?.tweets.map((tweet) => {
+                return <CardTweet key={tweet.id} tweet={tweet} user={user} />;
+              })}
+            </div>
+          </div>
+        </div> */}
       </section>
     </>
   );

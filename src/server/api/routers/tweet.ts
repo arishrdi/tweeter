@@ -28,4 +28,44 @@ export const tweetRouter = createTRPCRouter({
         console.log(error);
       }
     }),
+  getCurrentUserTweets: protectedProcedure
+    .input(
+      z.object({
+        username: z.string().optional(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      try {
+        return await ctx.db.user.findUnique({
+          where: {
+            username: input.username,
+          },
+          select: {
+            tweets: {
+              orderBy: { createdAt: "desc" },
+              include: {
+                _count: {
+                  select: {
+                    likes: true,
+                  },
+                },
+                likes: {
+                  where: {
+                    userId: ctx.session.user.id,
+                  },
+                },
+              },
+            },
+            // likes: {
+            //   where: {
+            //     userId: ctx.session.user.id,
+            //   },
+            // },
+            id: true,
+          },
+        });
+      } catch (error) {
+        console.log(error);
+      }
+    }),
 });
