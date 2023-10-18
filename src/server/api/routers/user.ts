@@ -30,7 +30,7 @@ export const userRouter = createTRPCRouter({
           data: {
             name: input.name,
             password: hashedPassword,
-            username: input.username,
+            username: input.username.replace(" ", ""),
             email: input.email,
           },
         });
@@ -68,26 +68,62 @@ export const userRouter = createTRPCRouter({
         console.log("Check username:", error);
       }
     }),
-  getCurrentUser: protectedProcedure.query(async ({ ctx }) => {
-    try {
-      return await ctx.db.user.findUnique({
-        where: {
-          id: ctx.session.user.id,
-        },
-        select: {
-          id: true,
-          name: true,
-          username: true,
-          email: true,
-          bio: true,
-          image: true,
-          coverProfile: true,
-        },
-      });
-    } catch (error) {
-      console.log(error);
-    }
-  }),
+  getCurrentUser: protectedProcedure
+    .input(
+      z.object({
+        username: z.string().optional(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      try {
+        let whereCondition;
+        if (input.username) {
+          whereCondition = {
+            username: input.username,
+          };
+        } else {
+          whereCondition = {
+            id: ctx.session.user.id,
+          };
+        }
+        const user = await ctx.db.user.findUnique({
+          where: {
+            username: input.username,
+          },
+          select: {
+            _count: {
+              select: {
+                followers: true,
+                followings: true,
+                tweets: true
+              }
+            },
+            followers: true,
+            id: true,
+            name: true,
+            username: true,
+            email: true,
+            bio: true,
+            image: true,
+            coverProfile: true,
+          },
+        });
+
+        const isFollowed = await ctx.db.follower.findMany({
+          where: {
+            followerUserId: user?.id,
+            userId: ctx.session.user.id,
+          },
+        });
+
+        const newUser = { ...user, isFollowed: isFollowed.length <= 0 ? false : true };
+
+        return newUser;
+      } catch (error) {
+        console.log(error);
+      }
+    }),
+
   getUsers: protectedProcedure
     .input(
       z.object({
@@ -135,7 +171,7 @@ export const userRouter = createTRPCRouter({
         console.error(error);
       }
     }),
-    getUsersAndFollowers: protectedProcedure
+  getUsersAndFollowers: protectedProcedure
     .input(
       z.object({
         search: z.string(),
@@ -162,12 +198,12 @@ export const userRouter = createTRPCRouter({
             },
           };
         }
-        const users =  await ctx.db.user.findMany({
+        const users = await ctx.db.user.findMany({
           select: {
             followers: {
               where: {
-                userId: ctx.session.user.id
-              }
+                userId: ctx.session.user.id,
+              },
             },
             followings: true,
             id: true,
@@ -179,9 +215,9 @@ export const userRouter = createTRPCRouter({
             coverProfile: true,
           },
           where: whereCondition,
-          take: 5
+          take: 5,
         });
-        return users
+        return users;
       } catch (error) {
         console.log(error);
       }

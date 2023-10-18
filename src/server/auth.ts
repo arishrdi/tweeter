@@ -24,6 +24,7 @@ declare module "next-auth" {
     user: DefaultSession["user"] & {
       id: string;
       image: string;
+      email: string
       username: string;
       coverProfile: string;
       // ...other properties
@@ -48,21 +49,17 @@ export const authOptions: NextAuthOptions = {
       if (trigger === "update" && session) {
         token.id = session.id;
         token.email = session.email;
-        token.name = session.name
-        token.picture = session.image
-        // token.email = session;
+        token.name = session.name;
+        token.picture = session.image;
+        token.username = session.username;
       }
       if (user) {
         token.id = user.id;
         token.email = user.email;
-        token.name = user.name
+        token.picture = user.image
+        token.name = user.name;
+        token.username = user.username;
       }
-
-      // if (trigger === "update" && session?.id && session?.email) {
-
-      //   token.id = session.id;
-      //   token.email = session.email;
-      // }
 
       return Promise.resolve(token);
     },
@@ -73,7 +70,14 @@ export const authOptions: NextAuthOptions = {
 
       return {
         ...session,
-        user: { ...session.user, id: token.id, name: token.name, image: token.picture, email: token.email },
+        user: {
+          ...session.user,
+          id: token.id,
+          name: token.name,
+          image: token.picture,
+          email: token.email,
+          username: token.username,
+        },
       };
     },
 

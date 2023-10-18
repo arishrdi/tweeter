@@ -15,8 +15,7 @@ import {
 import { useSession } from "next-auth/react";
 import Head from "next/head";
 import Image from "next/image";
-import React, { useMemo, useState } from "react";
-import Header from "~/components/Header";
+import React, { useMemo, useState, useEffect } from "react";
 import { api } from "~/utils/api";
 import cover from "~/images/cover-background.png";
 import { AtSign, Pencil } from "lucide-react";
@@ -24,10 +23,38 @@ import { useForm, type SubmitHandler } from "react-hook-form";
 import { type User } from "@prisma/client";
 import ImageUpload from "~/components/Upload";
 import { type PutBlobResult } from "@vercel/blob";
+import { useRouter } from "next/router";
+import useFollow from "~/hooks/useFollow";
+import { type IUser } from "~/types/user";
+import CardUsers from "~/components/CardUsers";
 
 export default function Profile() {
   const { data: session, update } = useSession();
-  const { data: user, refetch } = api.user.getCurrentUser.useQuery();
+  const router = useRouter();
+  const username = router.query.profile as string;
+  const { data: user, refetch } = api.user.getCurrentUser.useQuery({
+    username,
+  });
+
+  console.log("Profile", user);
+
+  // const isUserFollowed = !!user?.followers.find(
+  //   (u) => u.userId === session?.user.id,
+  // )?.userId;
+
+  // const isUserFollowed = 
+
+  // console.log("isUserFollowed", isUserFollowed, user?.followers);
+
+  const followerID = user?.followers?.map((u) => u.id)
+
+  // const { isFollowed, onFollowing, setIsFollowed } = useFollow(
+  //   user[0]?.isFollowed ?? false,
+  //   Number(followerID),
+  //   user[0],
+  // );
+
+  const {isFollowed, onFollowing, setIsFollowed} = useFollow(user?.isFollowed ?? false, Number(followerID), user?.id ?? "")
 
   if (!session) {
     return null;
@@ -38,7 +65,6 @@ export default function Profile() {
       <Head>
         <title>{session.user.name ?? ""} Profile</title>
       </Head>
-      {/* <Header /> */}
       <section>
         <div className="">
           <div className="relative">
@@ -58,50 +84,59 @@ export default function Profile() {
                   <Image
                     src={user?.image ?? cover}
                     alt="photo"
-                    width={150}
-                    height={150}
-                    className="absolute -top-10 rounded-lg border-4 border-white"
+                    width={200}
+                    height={200}
+                    className="absolute -top-10 h-40 w-40 rounded-lg border-4 border-white object-cover"
                   />
                   <div style={{ width: "150px" }}></div>
                   <div className="w-full">
                     <div className="grid w-full grid-flow-col items-center gap-10">
                       <h1 className="text-2xl font-bold">{user?.name}</h1>
                       <span>
-                        <strong>2333</strong> following
+                        <ModalFollowing
+                          userId={user?.id ?? ""}
+                          name={user?.name ?? ""}
+                        />
                       </span>
                       <span>
-                        <strong>2333</strong> follower
+                        <ModalFollower username={user?.username ?? ""} />
                       </span>
-                      <Button
-                        className="justify-self-end"
-                        startContent={<Pencil size={15} />}
-                        color="primary"
-                        variant="faded"
-                      >
-                        Edit
-                      </Button>
+                      {user?.id === session.user.id ? (
+                        <ModalEditProfile user={user} />
+                        // <p>mbuj</p>
+                      ) : (
+                        <Button
+                          className={
+                            !user?.isFollowed
+                              ? "border-default-200 bg-transparent text-foreground"
+                              : ""
+                          }
+                          color="primary"
+                          radius="full"
+                          size="sm"
+                          variant={!user?.isFollowed ? "bordered" : "solid"}
+                          onPress={() => setIsFollowed(!isFollowed)}
+                          onClick={onFollowing}
+                        >
+                          {!user?.isFollowed ? "Follow" : "Unfollow"}
+                        </Button>
+                      )}
                     </div>
-                    <article className="mt-5 min-h-[30px]">{user?.bio}</article>
+                    <article className="mt-5 min-h-[30px]" dangerouslySetInnerHTML={{__html: user?.bio ?? ""}}></article>
                   </div>
                 </CardBody>
               </div>
             </Card>
           </div>
         </div>
-        <ModalEditProfile user={user} />
         <br />
-        {user?.id} | {session.user.id} <br />
-        {user?.name} | {session.user.name} <br />
-        {user?.image} | {session.user.image} <br />
-        {user?.username} <br />
-        {user?.bio} <br />
-        <Button onClick={() => void update()}>Session</Button>
+        {router.query.profile}
       </section>
     </>
   );
 }
 
-type IUser = {
+type UserType = {
   id: string | null;
   name: string | null;
   image: string | null;
@@ -112,7 +147,7 @@ type IUser = {
 };
 
 type ModalEditProfileProps = {
-  user: IUser | undefined | null;
+  user: IUser;
 };
 
 function ModalEditProfile({ user }: ModalEditProfileProps) {
@@ -134,7 +169,7 @@ function ModalEditProfile({ user }: ModalEditProfileProps) {
 
   const { register, handleSubmit } = useForm<User>();
 
-  const onSubmitHandler: SubmitHandler<IUser> = async (data) => {
+  const onSubmitHandler: SubmitHandler<UserType> = async (data) => {
     // console.log(data);
     editProfile.mutate({
       ...data,
@@ -146,7 +181,15 @@ function ModalEditProfile({ user }: ModalEditProfileProps) {
 
   return (
     <>
-      <Button onPress={onOpen}>Edit Profile</Button>
+      <Button
+        onPress={onOpen}
+        className="justify-self-end"
+        startContent={<Pencil size={15} />}
+        color="primary"
+        variant="faded"
+      >
+        Edit
+      </Button>
       <Modal isOpen={isOpen} onOpenChange={onOpenChange}>
         <ModalContent>
           {(onClose) => (
@@ -220,6 +263,92 @@ function ModalEditProfile({ user }: ModalEditProfileProps) {
                   </Button>
                 </ModalFooter>
               </form>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
+    </>
+  );
+}
+
+type ModalFollowerProps = {
+  newUser?: IUser;
+  username?: string;
+  name?: string;
+  userId?: string;
+};
+
+function ModalFollower({ username }: ModalFollowerProps) {
+  const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const { data: user } = api.follow.getCurrentUserFollowers.useQuery({
+    username,
+  });
+  return (
+    <>
+      <Button onPress={onOpen} variant="light">
+        <strong>{user?.followers.length}</strong>Follower
+      </Button>
+      <Modal isOpen={isOpen} onOpenChange={onOpenChange}>
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader className="flex flex-col gap-1">
+                {user?.name}&apos;s Followers
+              </ModalHeader>
+              <ModalBody>
+                {user?.followers.map((u) => {
+                  return (
+                    <div key={u.id}>
+                      <p>{u.user.name}</p>
+                    </div>
+                  );
+                })}
+              </ModalBody>
+              <ModalFooter>
+                <Button color="danger" variant="light" onPress={onClose}>
+                  Close
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
+    </>
+  );
+}
+function ModalFollowing({ userId, name }: ModalFollowerProps) {
+  const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const { data: user } = api.follow.getCurrentUserFollowings.useQuery({
+    userId,
+  });
+  // console.log("Following", user);
+
+  return (
+    <>
+      <Button onPress={onOpen} variant="light">
+        <strong> {user?.length}</strong> Followings
+      </Button>
+      <Modal isOpen={isOpen} onOpenChange={onOpenChange}>
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader className="flex flex-col gap-1">
+                {name} is Following
+              </ModalHeader>
+              <ModalBody>
+                {user?.map((u) => {
+                  return (
+                    <div key={u.id}>
+                      <p>{u.followingUser.name}</p>
+                    </div>
+                  );
+                })}
+              </ModalBody>
+              <ModalFooter>
+                <Button color="danger" variant="light" onPress={onClose}>
+                  Close
+                </Button>
+              </ModalFooter>
             </>
           )}
         </ModalContent>

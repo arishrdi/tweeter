@@ -53,19 +53,12 @@ export default function SearchUser() {
     setSearch(e.target.value);
   };
 
-  console.log("users", users);
+  // console.log("users", users);
 
   return (
     <>
-      <Button onPress={onOpen} variant="faded">
-        <Input
-          type="email"
-          placeholder="search users"
-          startContent={<Search />}
-          disabled
-          // disableAnimation
-          isReadOnly
-        />
+      <Button onPress={onOpen} variant="faded" startContent={<Search />} className="pr-28 text-gray-400">
+        Search users
       </Button>
       <Modal isOpen={isOpen} onOpenChange={onOpenChange}>
         <ModalContent>
@@ -82,6 +75,7 @@ export default function SearchUser() {
                   value={search}
                   className="border-none"
                   size="lg"
+                  autoFocus
                 />
                 {users && users?.length <= 0 && (
                   <p>
@@ -91,7 +85,7 @@ export default function SearchUser() {
                 {users?.map((user) => {
                   return (
                     <CardUsers
-                    search={debounce}
+                    // search={debounce}
                       user={user}
                       key={user.id}
                       isUserFollowed={

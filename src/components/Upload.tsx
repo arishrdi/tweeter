@@ -52,7 +52,7 @@ export default function ImageUpload({
       {loading ? (
         <Spinner />
       ) : (
-        <Button isIconOnly variant="light">
+        <Button isIconOnly variant="light" className="text-gray-300">
           <label htmlFor={id} className="cursor-pointer">
             <ImagePlus />
           </label>

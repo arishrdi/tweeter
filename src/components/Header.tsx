@@ -19,7 +19,7 @@ import SearchUser from "./SearchUser";
 export default function Header() {
   const { data: session } = useSession();
 
-  console.log("Session", session);
+  // console.log("Session", session);
 
   return (
     <Navbar className="border border-b-1">
@@ -42,7 +42,7 @@ export default function Header() {
               </Link>
             </NavbarItem>
             <NavbarItem>
-              <Link as={NextLink} href="/about">
+              <Link as={NextLink} href="/bookmarks">
                 Bookmarks
               </Link>
             </NavbarItem>
