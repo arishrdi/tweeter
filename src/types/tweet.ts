@@ -1,6 +1,7 @@
 export type ITWeets = {
   _count: {
     likes: number;
+    comments: number;
   };
   likes: {
     id: number;
@@ -14,4 +15,4 @@ export type ITWeets = {
   image: string | null;
   createdAt: Date;
   updatedAt: Date;
-};
+} | undefined;

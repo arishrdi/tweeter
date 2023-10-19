@@ -22,7 +22,7 @@ export default function Header() {
   // console.log("Session", session);
 
   return (
-    <Navbar className="border border-b-1">
+    <Navbar isBordered  >
       <NavbarBrand>
         <NextLink href="/">
           <Image src={logo} alt="Logo" width={50} />

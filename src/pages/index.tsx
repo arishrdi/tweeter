@@ -1,21 +1,23 @@
 import { Avatar, Button, Card, CardBody, Textarea } from "@nextui-org/react";
-import { ImagePlus } from "lucide-react";
 import { useSession } from "next-auth/react";
 import Head from "next/head";
-import Header from "~/components/Header";
 import { type FormEvent, useState } from "react";
 import AvatarUploadPage from "~/components/Upload";
 import { type PutBlobResult } from "@vercel/blob";
 import ImageUpload from "~/components/Upload";
 import Image from "next/image";
-import cover from "~/images/cover-background.png"
-import dummy from "~/images/dummy.png"
 import { api } from "~/utils/api";
+import CardTweet from "~/components/CardTweet";
 
 export default function Home() {
   const { data } = useSession();
   const [content, setContent] = useState<string>("")
   const [image, setImage] = useState<PutBlobResult | null>(null);
+
+  const {data: tweets} = api.tweet.getAllTweets.useQuery()
+
+  // console.log("Tweets", tweets);
+  
 
   const postTweet = api.tweet.postTweet.useMutation({
     onSuccess() {
@@ -29,6 +31,10 @@ export default function Home() {
       content,
       image: image?.url
     })
+  }
+
+  if (!data) {
+    return null
   }
 
   return (
@@ -79,11 +85,19 @@ export default function Home() {
               </form>
             </CardBody>
           </Card>
-
-          <Card>
+          <div className="w-full">
+          <Card className="fixed self-stretch">
             <CardBody>Hastag</CardBody>
             <AvatarUploadPage setBlob={setImage} />
           </Card>
+          </div>
+          <div className="col-span-2 flex flex-col gap-10">
+            {tweets?.map((tweet) => {
+              return (
+                <CardTweet key={tweet?.id} tweet={tweet} user={tweet?.user} />
+              )
+            })}
+          </div>
         </main>
       </section>
     </>

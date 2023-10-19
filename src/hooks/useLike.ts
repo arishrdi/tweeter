@@ -1,3 +1,4 @@
+import { useCallback } from "react";
 import { api } from "~/utils/api";
 
 export default function useLike(tweetID: number, isLiked: boolean) {
@@ -21,6 +22,14 @@ export default function useLike(tweetID: number, isLiked: boolean) {
       likeTweet.mutate({ tweetID });
     }
   };
+  
+  const newOnLike = useCallback((tweetID: number) => {
+    if (isLiked) {
+      unlikeTweet.mutate({ tweetID });
+    } else {
+      likeTweet.mutate({ tweetID });
+    }
+  }, [isLiked, likeTweet, unlikeTweet])
 
   return { onLike };
 }

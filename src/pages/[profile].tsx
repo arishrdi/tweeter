@@ -30,6 +30,7 @@ import useFollow from "~/hooks/useFollow";
 import { type IUser } from "~/types/user";
 import CardUsers from "~/components/CardUsers";
 import CardTweet from "~/components/CardTweet";
+import Link from "next/link";
 
 export default function Profile() {
   const { data: session, update } = useSession();
@@ -132,7 +133,9 @@ export default function Profile() {
                 <Card className="">
                   <CardBody>
                     <Listbox variant="faded" color="primary">
-                      <ListboxItem key="tweet">Tweet</ListboxItem>
+                      <ListboxItem key="tweet" className="text-primary">
+                        Tweet
+                      </ListboxItem>
                       <ListboxItem key="reply">Tweet & Replies</ListboxItem>
                       <ListboxItem key="media">Media</ListboxItem>
                       <ListboxItem key="like">LIkes</ListboxItem>
