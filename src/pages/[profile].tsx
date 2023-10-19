@@ -147,7 +147,7 @@ export default function Profile() {
                 <div className=" flex flex-col gap-10">
                   {tweets?.tweets.map((tweet) => {
                     return (
-                      <CardTweet key={tweet.id} tweet={tweet} user={user} />
+                      <CardTweet key={tweet.id} tweet={tweet} user={user}  />
                     );
                   })}
                 </div>

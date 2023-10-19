@@ -24,6 +24,7 @@ import useLike from "~/hooks/useLike";
 import { useSession } from "next-auth/react";
 import { type User as UserType } from "@prisma/client";
 import { api } from "~/utils/api";
+import useBookmark from "~/hooks/useBookmark";
 
 type CardTweetProps = {
   user: UserType | null | undefined;
@@ -33,18 +34,21 @@ type CardTweetProps = {
 export default function CardTweet({ tweet, user }: CardTweetProps) {
   // const isLiked = tweet.likes.length <= 0;
   const isLiked = (tweet?.likes.length ?? 0) <= 0;
-  // console.log("Tweet", isLiked);
+  const isBookmarked = (tweet?.bookmarks.length ?? 0) <= 0;
+  // console.log("Tweet", tweet);
   const { data: session } = useSession();
   const [messageComment, setMessageComment] = useState("");
   const context = api.useContext();
 
   const { onLike } = useLike(tweet?.id ?? 0, !isLiked);
+  const { onBookmark } = useBookmark(tweet?.id ?? 0, !isBookmarked);
 
   const postComment = api.comment.postComment.useMutation({
     async onSuccess() {
       setMessageComment("");
       await context.tweet.getAllTweets.invalidate();
       await context.comment.getTweetComments.invalidate();
+      await context.tweet.getCurrentUserTweets.invalidate();
     },
   });
   const onCommentHandler = (e: FormEvent<HTMLFormElement>) => {
@@ -86,13 +90,6 @@ export default function CardTweet({ tweet, user }: CardTweetProps) {
         )}
 
         <div className="my-3 flex justify-between">
-          {/* <Button
-            startContent={<MessageSquare size={18} />}
-            variant="light"
-            color="primary"
-          >
-            Comments ({tweet._count.comments})
-          </Button> */}
           <ModalComment tweetID={tweet.id} count={tweet._count.comments} />
           <Button
             startContent={<RefreshCcw size={18} />}
@@ -111,10 +108,11 @@ export default function CardTweet({ tweet, user }: CardTweetProps) {
           </Button>
           <Button
             startContent={<Bookmark size={18} />}
-            variant="light"
-            color="primary"
+            variant={isBookmarked ? "light" : "shadow"}
+            onClick={onBookmark}
+            color={isBookmarked ? "primary" : "danger"}
           >
-            Saved
+            {isBookmarked ? "Save" : "Saved"}
           </Button>
         </div>
         <Divider />
@@ -183,35 +181,31 @@ function ModalComment({ tweetID, count }: ModalCommentProps) {
               </ModalHeader>
               <ModalBody>
                 {/* <div className="grid grid-cols-1 divide-y gap-5 place-items-center  "> */}
-                  {comments?.length
-                    ? comments.map((comment) => {
-                        return (
-                          <>
-                            <div key={comment.id} className="flex gap-3">
-                              <Avatar
-                                name={comment.user.name ?? ""}
-                                src={comment.user.image ?? ""}
-                              />
-                              <div className="w-full rounded-lg bg-gray-200/50 p-3">
-                                <div className="flex items-center gap-3">
-                                  <p className="font-bold">
-                                    {comment.user.name}
-                                  </p>
-                                  <span className=" text-foreground-400">
-                                    @{comment.user.username} ·{" "}
-                                    {comment.createdAt.toDateString()}
-                                  </span>
-                                </div>
-                                <p className="text-gray-700">
-                                  {comment.message}
-                                </p>
+                {comments?.length
+                  ? comments.map((comment) => {
+                      return (
+                        <>
+                          <div key={comment.id} className="mb-1 flex gap-3">
+                            <Avatar
+                              name={comment.user.name ?? ""}
+                              src={comment.user.image ?? ""}
+                            />
+                            <div className="w-full rounded-lg bg-gray-200/50 p-3">
+                              <div className="flex items-center gap-3">
+                                <p className="font-bold">{comment.user.name}</p>
+                                <span className=" text-foreground-400">
+                                  @{comment.user.username} ·{" "}
+                                  {comment.createdAt.toDateString()}
+                                </span>
                               </div>
+                              <p className="text-gray-700 whitespace-pre-wrap">{comment.message}</p>
                             </div>
-                            {/* <Divider /> */}
-                          </>
-                        );
-                      })
-                    : "There is no comment on this tweet"}
+                          </div>
+                          {/* <Divider /> */}
+                        </>
+                      );
+                    })
+                  : "There is no comment on this tweet"}
                 {/* </div> */}
               </ModalBody>
               <ModalFooter>

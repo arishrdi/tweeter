@@ -15,12 +15,12 @@ function MyAvatar() {
     <Dropdown placement="bottom-end">
       <DropdownTrigger>
         <Avatar
-          isBordered
+          // isBordered
           as="button"
           className="transition-transform"
-          color="secondary"
+          color="primary"
           name={data?.user.name ?? ''}
-          size="sm"
+          // size=""
           src={data?.user.image ?? ''}
         />
       </DropdownTrigger>

@@ -8,6 +8,11 @@ export type ITWeets = {
     userId: string;
     tweetId: number;
   }[];
+  bookmarks: {
+    id: number;
+    userId: string;
+    tweetId: number;
+  }[];
 } & {
   id: number;
   userId: string;

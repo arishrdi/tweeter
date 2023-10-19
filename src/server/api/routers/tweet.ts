@@ -47,6 +47,7 @@ export const tweetRouter = createTRPCRouter({
                 _count: {
                   select: {
                     likes: true,
+                    comments: true
                   },
                 },
                 likes: {
@@ -54,6 +55,11 @@ export const tweetRouter = createTRPCRouter({
                     userId: ctx.session.user.id,
                   },
                 },
+                bookmarks: {
+                  where: {
+                    userId: ctx.session.user.id,
+                  },
+                }
               },
             },
             // likes: {
@@ -110,6 +116,11 @@ export const tweetRouter = createTRPCRouter({
                         userId: ctx.session.user.id,
                       },
                     },
+                    bookmarks: {
+                      where: {
+                        userId: ctx.session.user.id,
+                      },
+                    }
                   },
                 }
               }
@@ -136,6 +147,11 @@ export const tweetRouter = createTRPCRouter({
                     userId: ctx.session.user.id,
                   },
                 },
+                bookmarks: {
+                  where: {
+                    userId: ctx.session.user.id,
+                  },
+                }
               },
             }
           }
