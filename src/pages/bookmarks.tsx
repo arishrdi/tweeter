@@ -20,7 +20,7 @@ export default function Bookmarks() {
         {tweets?.map((tweet, i) => {
           return (
             <div key={i} className="mb-5">
-              <CardTweet tweet={tweet.tweet} user={tweet.tweet.user} name={tweet.user.name ?? ""} userImage={tweet.user.image} />
+              <CardTweet tweet={tweet.tweet} user={tweet.tweet.user} />
             </div>
           );
         })}
