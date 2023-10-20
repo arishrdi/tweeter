@@ -4,6 +4,10 @@ import {
   Card,
   CardBody,
   Divider,
+  Dropdown,
+  DropdownItem,
+  DropdownMenu,
+  DropdownTrigger,
   Input,
   Modal,
   ModalBody,
@@ -15,9 +19,9 @@ import {
   useDisclosure,
 } from "@nextui-org/react";
 import Image from "next/image";
-import React, { FormEvent, useState } from "react";
+import React, { type FormEvent, useState } from "react";
 import { type ITWeets } from "~/types/tweet";
-import { type IUser } from "~/types/user";
+import { type DefaultUser, type IUser } from "~/types/user";
 import dummy from "~/images/dummy.png";
 import { Bookmark, Heart, MessageSquare, RefreshCcw, Send } from "lucide-react";
 import useLike from "~/hooks/useLike";
@@ -25,16 +29,18 @@ import { useSession } from "next-auth/react";
 import { type User as UserType } from "@prisma/client";
 import { api } from "~/utils/api";
 import useBookmark from "~/hooks/useBookmark";
+import useRetweet from "~/hooks/useRetweet";
 
 type CardTweetProps = {
-  user: UserType | null | undefined;
+  user: DefaultUser | null | undefined;
   tweet: ITWeets;
+  isUsingRetweet?: boolean
 };
 
-export default function CardTweet({ tweet, user }: CardTweetProps) {
-  // const isLiked = tweet.likes.length <= 0;
+export default function CardTweet({ tweet, user, isUsingRetweet }: CardTweetProps) {
   const isLiked = (tweet?.likes.length ?? 0) <= 0;
   const isBookmarked = (tweet?.bookmarks.length ?? 0) <= 0;
+  const isRetweet = (tweet?.retweets.length ?? 0) <= 0;
   // console.log("Tweet", tweet);
   const { data: session } = useSession();
   const [messageComment, setMessageComment] = useState("");
@@ -42,6 +48,7 @@ export default function CardTweet({ tweet, user }: CardTweetProps) {
 
   const { onLike } = useLike(tweet?.id ?? 0, !isLiked);
   const { onBookmark } = useBookmark(tweet?.id ?? 0, !isBookmarked);
+  const { onRetweet } = useRetweet(tweet?.id ?? 0, !isRetweet);
 
   const postComment = api.comment.postComment.useMutation({
     async onSuccess() {
@@ -66,6 +73,9 @@ export default function CardTweet({ tweet, user }: CardTweetProps) {
   return (
     <Card>
       <CardBody>
+        {
+          isUsingRetweet && tweet.userId !== session?.user.id ? <p className="text-tiny text-foreground-400 flex items-center gap-3 mb-3"><RefreshCcw size={15} />Retweet</p> : null
+        }
         <User
           name={user?.name}
           description={
@@ -94,21 +104,22 @@ export default function CardTweet({ tweet, user }: CardTweetProps) {
           <Button
             startContent={<RefreshCcw size={18} />}
             variant="light"
-            color="primary"
+            onClick={onRetweet}
+            color={isRetweet ? "primary" : "danger"}
           >
-            Retweets
+            Retweets ({tweet._count.retweets})
           </Button>
           <Button
             startContent={<Heart size={18} />}
-            variant={isLiked ? "light" : "shadow"}
+            variant="light"
             onClick={onLike}
             color={isLiked ? "primary" : "danger"}
           >
-            {isLiked ? "Likes" : "Liked"} ({tweet._count.likes})
+            Likes ({tweet._count.likes})
           </Button>
           <Button
             startContent={<Bookmark size={18} />}
-            variant={isBookmarked ? "light" : "shadow"}
+            variant="light"
             onClick={onBookmark}
             color={isBookmarked ? "primary" : "danger"}
           >
@@ -152,15 +163,14 @@ export default function CardTweet({ tweet, user }: CardTweetProps) {
   );
 }
 
-type ModalCommentProps = {
+type ModalProps = {
   tweetID: number;
-  count: number;
+  count?: number;
 };
 
-function ModalComment({ tweetID, count }: ModalCommentProps) {
+function ModalComment({ tweetID, count }: ModalProps) {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const { data: comments } = api.comment.getTweetComments.useQuery({ tweetID });
-  // console.log("Comments", comments);
 
   return (
     <>
@@ -174,52 +184,125 @@ function ModalComment({ tweetID, count }: ModalCommentProps) {
       </Button>
       <Modal isOpen={isOpen} onOpenChange={onOpenChange} size="2xl">
         <ModalContent>
-          {(onClose) => (
-            <>
-              <ModalHeader className="flex flex-col gap-1">
-                Comments ({count})
-              </ModalHeader>
-              <ModalBody>
-                {/* <div className="grid grid-cols-1 divide-y gap-5 place-items-center  "> */}
-                {comments?.length
-                  ? comments.map((comment) => {
-                      return (
-                        <>
-                          <div key={comment.id} className="mb-1 flex gap-3">
-                            <Avatar
-                              name={comment.user.name ?? ""}
-                              src={comment.user.image ?? ""}
-                            />
-                            <div className="w-full rounded-lg bg-gray-200/50 p-3">
-                              <div className="flex items-center gap-3">
-                                <p className="font-bold">{comment.user.name}</p>
-                                <span className=" text-foreground-400">
-                                  @{comment.user.username} ·{" "}
-                                  {comment.createdAt.toDateString()}
-                                </span>
-                              </div>
-                              <p className="text-gray-700 whitespace-pre-wrap">{comment.message}</p>
+          <>
+            <ModalHeader className="flex flex-col gap-1">
+              Comments ({count})
+            </ModalHeader>
+            <ModalBody>
+              {comments?.length
+                ? comments.map((comment, i) => {
+                    return (
+                      <>
+                        <div key={i} className="mb-1 flex gap-3">
+                          <Avatar
+                            name={comment.user.name ?? ""}
+                            src={comment.user.image ?? ""}
+                          />
+                          <div className="w-full rounded-lg bg-gray-200/50 p-3 dark:bg-white/10">
+                            <div className="flex items-center gap-3">
+                              <p className="font-bold">{comment.user.name}</p>
+                              <span className="text-foreground">
+                                @{comment.user.username} ·{" "}
+                                {comment.createdAt.toDateString()}
+                              </span>
                             </div>
+                            <p className="whitespace-pre-wrap text-gray-700 dark:text-white">
+                              {comment.message}
+                            </p>
                           </div>
-                          {/* <Divider /> */}
-                        </>
-                      );
-                    })
-                  : "There is no comment on this tweet"}
-                {/* </div> */}
-              </ModalBody>
-              <ModalFooter>
-                {/* <Button color="danger" variant="light" onPress={onClose}>
-                  Close
-                </Button>
-                <Button color="primary" onPress={onClose}>
-                  Action
-                </Button> */}
-              </ModalFooter>
-            </>
-          )}
+                        </div>
+                      </>
+                    );
+                  })
+                : "There is no comment on this tweet"}
+            </ModalBody>
+            <ModalFooter></ModalFooter>
+          </>
         </ModalContent>
       </Modal>
     </>
   );
 }
+
+// type ModalRetweetProps = {
+//   user: DefaultUser | null | undefined;
+//   tweet: ITWeets;
+// };
+// function ModalQuote({ tweet, user }: ModalRetweetProps) {
+//   const { isOpen, onOpen, onOpenChange } = useDisclosure();
+
+//   return (
+//     <>
+//         {/* <DropdownItem onPress={onOpen} key="quote">Quote</DropdownItem> */}
+
+//       <Button
+//         onPress={onOpen}
+//         startContent={<RefreshCcw size={18} />}
+//         variant="light"
+//         color="primary"
+//       >
+//         Quote
+//       </Button>
+//       <Modal isOpen={isOpen} onOpenChange={onOpenChange} size="2xl">
+//         <ModalContent>
+//           <>
+//             <ModalHeader className="flex flex-col gap-1">
+//               Retweet this tweet
+//             </ModalHeader>
+//             <ModalBody>
+//               <Textarea
+//                 // label="Tweet something  "
+//                 // labelPlacement="outside"
+//                 placeholder="What's happening to this tweet"
+//                 variant="underlined"
+//                 className="w-full"
+//                 minRows={1}
+//               />
+//               <div className="rounded-lg border border-gray-300 p-3">
+//                 <p className="flex items-center gap-3 mb-3">
+//                   <RefreshCcw size={15} />
+//                   Retweet from
+//                 </p>
+//                 <div className="flex items-center gap-3 text-tiny text-foreground">
+//                   <Avatar
+//                     name={user?.name ?? ""}
+//                     src={user?.image ?? ""}
+//                     size="sm"
+//                   />
+//                   <p>
+//                     {user?.name} | @{user?.username}
+//                   </p>
+//                 </div>
+//                 <p className="mt-3 whitespace-pre-wrap">{tweet?.content}</p>
+//               </div>
+//             </ModalBody>
+//             <ModalFooter>
+//               <Button color="primary">Retweet</Button>
+//             </ModalFooter>
+//           </>
+//         </ModalContent>
+//       </Modal>
+//     </>
+//   );
+// }
+
+// function RetweetButton({tweet, user}: ModalRetweetProps) {
+//   return (
+//     <Dropdown>
+//       <DropdownTrigger>
+//       <Button
+//         startContent={<RefreshCcw size={18} />}
+//         variant="light"
+//         color="primary"
+//       >
+//         Retweets
+//       </Button>
+//       </DropdownTrigger>
+//       <DropdownMenu aria-label="Static Actions">
+//         <DropdownItem key="new">Retweet</DropdownItem>
+//         <DropdownItem key="new">Retweet</DropdownItem>
+//         <ModalQuote user={user} tweet={tweet} />
+//       </DropdownMenu>
+//     </Dropdown>
+//   )
+// }

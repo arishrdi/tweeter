@@ -2,6 +2,7 @@ export type ITWeets = {
   _count: {
     likes: number;
     comments: number;
+    retweets: number
   };
   likes: {
     id: number;
@@ -9,6 +10,11 @@ export type ITWeets = {
     tweetId: number;
   }[];
   bookmarks: {
+    id: number;
+    userId: string;
+    tweetId: number;
+  }[];
+  retweets: {
     id: number;
     userId: string;
     tweetId: number;

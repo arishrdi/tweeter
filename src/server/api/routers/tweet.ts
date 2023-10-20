@@ -36,7 +36,41 @@ export const tweetRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       try {
-        return await ctx.db.user.findUnique({
+        const retweet = await ctx.db.retweet.findMany({
+          where: {
+            userId: ctx.session.user.id
+          },
+          select: {
+            tweet: {
+              include: {
+                _count: {
+                  select: {
+                    likes: true,
+                    comments: true,
+                    retweets: true
+                  }
+                },
+                user: true,
+                likes: {
+                  where: {
+                    userId: ctx.session.user.id,
+                  },
+                },
+                bookmarks: {
+                  where: {
+                    userId: ctx.session.user.id,
+                  },
+                },
+                retweets: {
+                  where: {
+                    userId: ctx.session.user.id,
+                  },
+                }
+              }
+            }
+          }
+        })
+        const tweet =  await ctx.db.user.findUnique({
           where: {
             username: input.username,
           },
@@ -47,15 +81,22 @@ export const tweetRouter = createTRPCRouter({
                 _count: {
                   select: {
                     likes: true,
-                    comments: true
+                    comments: true,
+                    retweets: true,
                   },
                 },
+                user: true,
                 likes: {
                   where: {
                     userId: ctx.session.user.id,
                   },
                 },
                 bookmarks: {
+                  where: {
+                    userId: ctx.session.user.id,
+                  },
+                },
+                retweets: {
                   where: {
                     userId: ctx.session.user.id,
                   },
@@ -70,6 +111,11 @@ export const tweetRouter = createTRPCRouter({
             id: true,
           },
         });
+
+        const newTweet = tweet?.tweets.map((t) => t)
+        const newRetweet = retweet.map((t) => t.tweet).map((x) => x)
+        const newTweets = [newTweet, newRetweet] 
+        return newTweets.flat(2)
       } catch (error) {
         console.log(error);
       }
@@ -77,23 +123,6 @@ export const tweetRouter = createTRPCRouter({
     getAllTweets: protectedProcedure
     .query(async({ctx}) => {
       try {
-        // return await ctx.db.user.findUnique({
-        //   where: {
-        //     id: ctx.session.user.id
-        //   },
-        //   select: {
-        //     tweets: true,
-        //     followers: {
-        //       select: {
-        //         user: {
-        //           include: {
-        //             tweets: true
-        //           }
-        //         }
-        //       }
-        //     }
-        //   }
-        // })
 
         const followingTweets = await ctx.db.follower.findMany({
           where: {
@@ -103,11 +132,15 @@ export const tweetRouter = createTRPCRouter({
             followingUser: {
               select: {
                 tweets: {
+                  orderBy: {
+                    createdAt: "desc"
+                  },
                   include: {
                     _count: {
                       select: {
                         likes: true,
-                        comments: true
+                        comments: true,
+                        retweets: true
                       },
                     },
                   user: true,
@@ -120,7 +153,47 @@ export const tweetRouter = createTRPCRouter({
                       where: {
                         userId: ctx.session.user.id,
                       },
+                    },
+                    retweets: {
+                      where: {
+                        userId: ctx.session.user.id,
+                      },
                     }
+                  },
+                }
+              }
+            }
+          }
+        })
+
+        const retweetingTweets = await ctx.db.retweet.findMany({
+          where: {
+            userId: ctx.session.user.id
+          },
+          select: {
+            tweet: {
+              include: {
+                _count: {
+                  select: {
+                    likes: true,
+                    comments: true,
+                    retweets: true
+                  }
+                },
+                user: true,
+                likes: {
+                  where: {
+                    userId: ctx.session.user.id,
+                  },
+                },
+                bookmarks: {
+                  where: {
+                    userId: ctx.session.user.id,
+                  },
+                },
+                retweets: {
+                  where: {
+                    userId: ctx.session.user.id,
                   },
                 }
               }
@@ -134,11 +207,15 @@ export const tweetRouter = createTRPCRouter({
           },
           select: {
             tweets: {
+              orderBy: {
+                createdAt: "desc"
+              },
               include: {
                 _count: {
                   select: {
                     likes: true,
-                    comments: true
+                    comments: true,
+                    retweets: true
                   },
                 },
                 user: true,
@@ -148,6 +225,11 @@ export const tweetRouter = createTRPCRouter({
                   },
                 },
                 bookmarks: {
+                  where: {
+                    userId: ctx.session.user.id,
+                  },
+                },
+                retweets: {
                   where: {
                     userId: ctx.session.user.id,
                   },
@@ -162,6 +244,7 @@ export const tweetRouter = createTRPCRouter({
         const newFollowingTweets = followingTweets.map((t) => t.followingUser.tweets).map((u) => u)
         const filterFollowingTweets = newFollowingTweets.filter((t) => t.length >= 1).map((u) => u)
 
+        const newRetweet = retweetingTweets.map((t) => t.tweet)
         const newTweets = [newCurrentUserTweets,filterFollowingTweets] 
 
         return newTweets.flat(2)

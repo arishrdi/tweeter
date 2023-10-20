@@ -44,7 +44,7 @@ export default function Profile() {
     username,
   });
 
-  // console.log("Profile", tweets);
+  console.log("Profile", tweets);
 
   const followerID = user?.followers?.map((u) => u.id);
 
@@ -145,9 +145,9 @@ export default function Profile() {
               </div>
               <div className="col-span-2">
                 <div className=" flex flex-col gap-10">
-                  {tweets?.tweets.map((tweet) => {
+                  {tweets?.map((tweet, i) => {
                     return (
-                      <CardTweet key={tweet.id} tweet={tweet} user={user}  />
+                      <CardTweet key={i} tweet={tweet} user={tweet?.user} isUsingRetweet  />
                     );
                   })}
                 </div>

@@ -7,6 +7,7 @@ import { api } from "~/utils/api";
 import "~/styles/globals.css";
 import { NextUIProvider } from "@nextui-org/react";
 import Header from "~/components/Header";
+import { ThemeProvider } from "next-themes";
 
 const MyApp: AppType<{ session: Session | null }> = ({
   Component,
@@ -15,7 +16,9 @@ const MyApp: AppType<{ session: Session | null }> = ({
   return (
     <SessionProvider session={session}>
       <NextUIProvider>
-        <Header />
+        <ThemeProvider attribute="class" defaultTheme="dark">
+          <Header />
+        </ThemeProvider>
         <Component {...pageProps} />
       </NextUIProvider>
     </SessionProvider>

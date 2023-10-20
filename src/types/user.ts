@@ -31,3 +31,12 @@ export type IUser =
     }
   | null
   | undefined;
+
+export type DefaultUser = {
+  name?: string | null | undefined;
+  username?: string | null | undefined;
+  bio?: string | null | undefined;
+  image?: string | null | undefined;
+  coverProfile?: string | null | undefined;
+  id?: string | undefined;
+}

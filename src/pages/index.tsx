@@ -16,7 +16,7 @@ export default function Home() {
 
   const {data: tweets} = api.tweet.getAllTweets.useQuery()
 
-  // console.log("Tweets", tweets);
+  console.log("Tweets", tweets);
   
 
   const postTweet = api.tweet.postTweet.useMutation({
@@ -45,7 +45,7 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       {/* <Header /> */}
-      <section className="min-h-screen bg-gray-100 pt-5">
+      <section className="min-h-screen pt-5">
         <main className="mx-20 grid grid-cols-3 gap-5">
           <Card className="col-span-2">
             <CardBody>
@@ -92,9 +92,9 @@ export default function Home() {
           </Card>
           </div>
           <div className="col-span-2 flex flex-col gap-10">
-            {tweets?.map((tweet) => {
+            {tweets?.map((tweet, i) => {
               return (
-                <CardTweet key={tweet?.id} tweet={tweet} user={tweet?.user} />
+                <CardTweet key={i} tweet={tweet} user={tweet?.user} />
               )
             })}
           </div>

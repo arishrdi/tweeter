@@ -40,4 +40,64 @@ export const bookmarkRouter = createTRPCRouter({
         console.log(error);
       }
     }),
+  getAllBookmarks: protectedProcedure.query(async ({ ctx }) => {
+    try {
+      return await ctx.db.bookmark.findMany({
+        where: {
+          userId: ctx.session.user.id,
+        },
+        select: {
+          tweet: {
+            include: {
+              user: {
+                select: {
+                  name: true,
+                  username: true,
+                  bio: true,
+                  image: true,
+                  coverProfile: true,
+                  id: true
+                }
+              },
+              _count: {
+                select: {
+                  likes: true,
+                  comments: true,
+                  retweets: true
+                },
+              },
+              likes: {
+                where: {
+                  userId: ctx.session.user.id,
+                },
+              },
+              bookmarks: {
+                where: {
+                  userId: ctx.session.user.id,
+                },
+              },
+              retweets: {
+                where: {
+                  userId: ctx.session.user.id,
+                },
+              }
+            }
+          },
+          user: {
+            select: {
+              id: true,
+              name: true,
+              username: true,
+              bio: true,
+              image: true,
+              coverProfile: true,
+            },
+          },
+        },
+      });
+    } catch (error) {
+      console.log(error);
+      
+    }
+  }),
 });
