@@ -10,7 +10,7 @@ export default function Register() {
 
   const register = api.user.register.useMutation();
 
-  const handleSubmit = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     register.mutate({
       name,

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-misused-promises */
 import {
   Avatar,
   Button,
@@ -214,7 +215,7 @@ function ModalEditProfile({ user }: ModalEditProfileProps) {
 
   const { register, handleSubmit } = useForm<User>();
 
-  const onSubmitHandler: SubmitHandler<UserType> = async (data) => {
+  const onSubmitHandler: SubmitHandler<UserType> =  (data) => {
     // console.log(data);
     editProfile.mutate({
       ...data,

@@ -1,8 +1,9 @@
+/* eslint-disable @typescript-eslint/no-misused-promises */
 import { Button, Divider, Input, Link, button } from "@nextui-org/react";
 import { Eye, EyeOff } from "lucide-react";
 import { signIn } from "next-auth/react";
 import Image from "next/image";
-import React, { useState } from "react";
+import React, { FormEvent, useState } from "react";
 import Google from "~/images/google.svg";
 import Logo from "~/images/logo.png";
 import NextLink from "next/link";
@@ -12,7 +13,7 @@ export default function Login() {
   const [password, setPassword] = useState<string>("");
   const [isPasswordVisible, setPasswordVisible] = useState(false);
 
-  const handleSubmit = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     await signIn("credentials", { username, password, callbackUrl: "/" });
   };
@@ -30,7 +31,7 @@ export default function Login() {
         </h1>
         <h3 className="mb-3 text-right text-4xl font-bold">Join Now</h3>
         <div className="flex w-full gap-4">
-          <form onSubmit={handleSubmit} className="flex w-full flex-col gap-3">
+          <form onSubmit={(e) => e} className="flex w-full flex-col gap-3">
             <Input
               onChange={(e) => setUsername(e.target.value)}
               type="text"
@@ -67,7 +68,7 @@ export default function Login() {
               variant="flat"
               color="primary"
               startContent={
-                <Image src={Google} width={20} height={20} alt="Google" />
+                <Image src={Google as string} width={20} height={20} alt="Google" />
               }
             >
               Continue with google
