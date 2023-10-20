@@ -55,7 +55,7 @@ export default function Header() {
           </>
         ) : (
           <NavbarItem>
-            <Link as={NextLink} isActive={isNavActive === '/about'} href="/about">
+            <Link as={NextLink} href="/about">
               About
             </Link>
           </NavbarItem>
