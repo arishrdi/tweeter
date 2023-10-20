@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { type GetServerSidePropsContext } from "next";
 import {
@@ -58,7 +60,7 @@ export const authOptions: NextAuthOptions = {
         token.email = user.email;
         token.picture = user.image
         token.name = user.name;
-        token.username = user.username;
+        // token.username = user.username;
       }
 
       return Promise.resolve(token);
