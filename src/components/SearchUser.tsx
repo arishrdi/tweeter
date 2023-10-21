@@ -90,7 +90,7 @@ export default function SearchUser() {
                       key={user.id}
                       isUserFollowed={
                         !user.followers.find(
-                          (u) => u.userId === session?.user.id,
+                          (u) => u.userId === session?.user?.id,
                         )
                       }
                     />

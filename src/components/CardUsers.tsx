@@ -89,7 +89,7 @@ export default function CardUsers({
             </h5>
           </div>
         </Link>
-        {user.id !== session?.user.id && (
+        {user.id !== session?.user?.id && (
           <Button
             className={
               !isFollowed

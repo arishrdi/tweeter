@@ -50,10 +50,10 @@ export default function Home() {
           <Card className="col-span-2">
             <CardBody>
               <form className="flex w-full gap-3" onSubmit={(e) => submitHandler(e)}>
-                {data?.user.image ? (
+                {data?.user?.image ? (
                   <Avatar src={data.user.image} />
                 ) : (
-                  <Avatar name={data?.user.name ?? ""} />
+                  <Avatar name={data?.user?.name ?? ""} />
                 )}
                 <div className="w-full">
                   <Textarea

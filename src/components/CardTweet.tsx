@@ -74,7 +74,7 @@ export default function CardTweet({ tweet, user, isUsingRetweet }: CardTweetProp
     <Card>
       <CardBody>
         {
-          isUsingRetweet && tweet.userId !== session?.user.id ? <p className="text-tiny text-foreground-400 flex items-center gap-3 mb-3"><RefreshCcw size={15} />Retweet</p> : null
+          isUsingRetweet && tweet.userId !== session?.user?.id ? <p className="text-tiny text-foreground-400 flex items-center gap-3 mb-3"><RefreshCcw size={15} />Retweet</p> : null
         }
         <User
           name={user?.name}
@@ -130,8 +130,8 @@ export default function CardTweet({ tweet, user, isUsingRetweet }: CardTweetProp
         <div className="mt-5 flex space-x-5">
           <div className="w-min">
             <Avatar
-              name={session?.user.name ?? ""}
-              src={session?.user.image ?? ""}
+              name={session?.user?.name ?? ""}
+              src={session?.user?.image ?? ""}
             />
           </div>
           <form

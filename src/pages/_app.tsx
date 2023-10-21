@@ -15,24 +15,14 @@ const MyApp: AppType<{ session: Session | null }> = ({
 }) => {
   return (
     <SessionProvider session={session}>
-      {/* <Auth> */}
         <NextUIProvider>
           <ThemeProvider attribute="class" defaultTheme="dark">
             <Header />
           </ThemeProvider>
           <Component {...pageProps} />
         </NextUIProvider>
-      {/* </Auth> */}
     </SessionProvider>
   );
 };
 
 export default api.withTRPC(MyApp);
-
-// function Auth({ children }: { children: React.ReactNode }) {
-//   const { status } = useSession();
-//   if (status === "unauthenticated") {
-//     return null;
-//   }
-//   return <div>{children}</div>;
-// }

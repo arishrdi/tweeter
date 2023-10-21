@@ -12,7 +12,7 @@ export default function Bookmarks() {
   return (
     <>
       <Head>
-        <title>{session?.user.name}&apos;s Bookmarks</title>
+        <title>{session?.user?.name}&apos;s Bookmarks</title>
      </Head>
       <div
         className="mx-20 columns-2 gap-5 mt-5"
