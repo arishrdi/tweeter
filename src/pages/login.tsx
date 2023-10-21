@@ -31,7 +31,7 @@ export default function Login() {
         </h1>
         <h3 className="mb-3 text-right text-4xl font-bold">Join Now</h3>
         <div className="flex w-full gap-4">
-          <form onSubmit={(e) => e} className="flex w-full flex-col gap-3">
+          <form onSubmit={(e) => handleSubmit(e)} className="flex w-full flex-col gap-3">
             <Input
               onChange={(e) => setUsername(e.target.value)}
               type="text"

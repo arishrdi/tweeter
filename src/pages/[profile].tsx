@@ -62,7 +62,7 @@ export default function Profile() {
   return (
     <>
       <Head>
-        <title>{session.user.name ?? ""} Profile</title>
+        <title>{session.user?.name ?? ""} Profile</title>
       </Head>
       <section>
         <div className="">
@@ -80,16 +80,21 @@ export default function Profile() {
             <Card className="mx-20 !overflow-visible">
               <div className="">
                 <CardBody className="relative flex w-full  flex-row gap-10 !overflow-visible">
-                  <Image
+                  <Avatar
+                    name={user?.name ?? ""}
+                    src={user?.image ?? ""}
+                    className="absolute -top-10 h-40 w-40 rounded-lg border-4 border-white text-4xl"
+                  />
+                  {/* <Image
                     src={user?.image ?? cover}
                     alt="photo"
                     width={200}
                     height={200}
                     className="absolute -top-10 h-40 w-40 rounded-lg border-4 border-white object-cover"
-                  />
+                  /> */}
                   <div style={{ width: "150px" }}></div>
                   <div className="w-full">
-                    <div className="grid w-full grid-flow-col items-center gap-10">
+                    <div className=" grid w-full grid-flow-col items-center gap-10">
                       <h1 className="text-2xl font-bold">{user?.name}</h1>
                       <span>
                         <ModalFollowing
@@ -100,7 +105,7 @@ export default function Profile() {
                       <span>
                         <ModalFollower username={user?.username ?? ""} />
                       </span>
-                      {user?.id === session.user.id ? (
+                      {user?.id === session.user?.id ? (
                         <ModalEditProfile user={user} />
                       ) : (
                         // <p>mbuj</p>
@@ -122,7 +127,6 @@ export default function Profile() {
                       )}
                     </div>
                     <p className="min-h-[60px] whitespace-pre-wrap">
-                      {" "}
                       {user?.bio ?? ""}
                     </p>
                   </div>
@@ -148,7 +152,12 @@ export default function Profile() {
                 <div className=" flex flex-col gap-10">
                   {tweets?.map((tweet, i) => {
                     return (
-                      <CardTweet key={i} tweet={tweet} user={tweet?.user} isUsingRetweet  />
+                      <CardTweet
+                        key={i}
+                        tweet={tweet}
+                        user={tweet?.user}
+                        isUsingRetweet
+                      />
                     );
                   })}
                 </div>
@@ -215,7 +224,7 @@ function ModalEditProfile({ user }: ModalEditProfileProps) {
 
   const { register, handleSubmit } = useForm<User>();
 
-  const onSubmitHandler: SubmitHandler<UserType> =  (data) => {
+  const onSubmitHandler: SubmitHandler<UserType> = (data) => {
     // console.log(data);
     editProfile.mutate({
       ...data,
@@ -265,7 +274,12 @@ function ModalEditProfile({ user }: ModalEditProfileProps) {
                         <Avatar
                           isBordered
                           color="success"
-                          src={image?.url ?? user?.image ?? session?.user.image}
+                          src={
+                            image?.url ??
+                            user?.image ??
+                            session?.user?.image ??
+                            ""
+                          }
                           alt="cover"
                           className="h-24 w-24 brightness-75"
                         />

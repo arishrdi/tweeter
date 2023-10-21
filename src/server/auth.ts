@@ -21,7 +21,8 @@ import * as argon2 from "argon2";
  *
  * @see https://next-auth.js.org/getting-started/typescript#module-augmentation
  */
-declare module "next-auth" {
+// declare module "next-auth" {
+declare global {
   interface Session extends DefaultSession {
     user: DefaultSession["user"] & {
       id: string;
@@ -48,11 +49,17 @@ declare module "next-auth" {
 export const authOptions: NextAuthOptions = {
   callbacks: {
     jwt: async ({ token, user, trigger, session }) => {
-      if (trigger === "update" && session) {
-        token.id = session.id;
+      if (trigger === "update" && session.email) {
+        // token.id = session.id;
         token.email = session.email;
+      }
+      if (trigger === "update" && session.name) {
         token.name = session.name;
+      }
+      if (trigger === "update" && session.image) {
         token.picture = session.image;
+      }
+      if (trigger === "update" && session.username) {
         token.username = session.username;
       }
       if (user) {
@@ -60,7 +67,7 @@ export const authOptions: NextAuthOptions = {
         token.email = user.email;
         token.picture = user.image
         token.name = user.name;
-        // token.username = user.username;
+        token.username = user.username;
       }
 
       return Promise.resolve(token);
@@ -127,8 +134,10 @@ export const authOptions: NextAuthOptions = {
           if (password) {
             return user;
           }
+          // throw new Error("Password Keleru")
           return null;
         } else {
+          // throw new Error("Username Keleru")
           return null;
         }
       },

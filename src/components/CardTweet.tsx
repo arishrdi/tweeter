@@ -100,7 +100,7 @@ export default function CardTweet({ tweet, user, isUsingRetweet }: CardTweetProp
         )}
 
         <div className="my-3 flex justify-between">
-          <ModalComment tweetID={tweet.id} count={tweet._count.comments} />
+          <ModalComment tweetID={tweet.id} count={tweet._count.comments} key={tweet.id} />
           <Button
             startContent={<RefreshCcw size={18} />}
             variant="light"
